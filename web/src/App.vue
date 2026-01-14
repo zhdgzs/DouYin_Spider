@@ -70,16 +70,11 @@
           <!-- 视频信息 -->
           <VideoInfo :info="videoInfo" />
 
-          <!-- 清晰度列表 -->
-          <QualityList
+          <!-- 视频预览与清晰度选择（合并组件） -->
+          <VideoPreviewPanel
             :qualities="videoInfo?.video_urls || []"
+            :video-title="videoInfo?.title"
             @select="handleQualitySelect"
-          />
-
-          <!-- 视频预览 -->
-          <VideoPlayer
-            :video-url="selectedVideoUrl"
-            :current-quality="selectedQuality?.quality"
           />
         </div>
       </el-main>
@@ -99,8 +94,7 @@ import { ElMessage } from 'element-plus'
 import { Warning, User } from '@element-plus/icons-vue'
 import VideoInput from './components/VideoInput.vue'
 import VideoInfo from './components/VideoInfo.vue'
-import QualityList from './components/QualityList.vue'
-import VideoPlayer from './components/VideoPlayer.vue'
+import VideoPreviewPanel from './components/VideoPreviewPanel.vue'
 import AuthChecker from './components/AuthChecker.vue'
 import CookieManager from './components/CookieManager.vue'
 import { parseVideo } from './api/video'
@@ -110,8 +104,6 @@ import type { UserInfo } from './types/auth'
 const loading = ref(false)
 const errorMessage = ref('')
 const videoInfo = ref<VideoInfoType | null>(null)
-const selectedQuality = ref<VideoQuality | null>(null)
-const selectedVideoUrl = ref('')
 
 // 认证状态
 const showCookieManager = ref(false)
@@ -141,8 +133,6 @@ async function handleParse(url: string) {
   loading.value = true
   errorMessage.value = ''
   videoInfo.value = null
-  selectedQuality.value = null
-  selectedVideoUrl.value = ''
 
   try {
     const response = await parseVideo(url)
@@ -161,9 +151,9 @@ async function handleParse(url: string) {
   }
 }
 
-function handleQualitySelect(quality: VideoQuality) {
-  selectedQuality.value = quality
-  selectedVideoUrl.value = quality.url
+function handleQualitySelect(_quality: VideoQuality) {
+  // 清晰度选择由 VideoPreviewPanel 内部处理
+  // 此处可用于外部状态同步（如需要）
 }
 </script>
 

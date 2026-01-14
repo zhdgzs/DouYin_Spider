@@ -121,12 +121,17 @@ def save_to_xlsx(datas, file_path):
     logger.info(f'数据保存至 {file_path}')
 
 def download_media(path, name, url, type):
+    # 设置必要的请求头以绕过抖音防盗链
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Referer": "https://www.douyin.com/"
+    }
     if type == 'image':
-        content = requests.get(url).content
+        content = requests.get(url, headers=headers).content
         with open(path + '/' + name + '.jpg', mode="wb") as f:
             f.write(content)
     elif type == 'video':
-        res = requests.get(url, stream=True)
+        res = requests.get(url, headers=headers, stream=True)
         size = 0
         chunk_size = 1024 * 1024
         with open(path + '/' + name + '.mp4', mode="wb") as f:

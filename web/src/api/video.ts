@@ -21,10 +21,21 @@ export async function parseVideo(url: string): Promise<VideoParseResponse> {
 }
 
 /**
- * 获取视频代理 URL
+ * 获取视频代理 URL（用于预览播放）
  */
 export function getProxyUrl(originalUrl: string): string {
   return `/api/video/proxy?url=${encodeURIComponent(originalUrl)}`
+}
+
+/**
+ * 获取视频下载 URL（用于下载）
+ */
+export function getDownloadUrl(originalUrl: string, filename?: string): string {
+  const params = new URLSearchParams({ url: originalUrl })
+  if (filename) {
+    params.append('filename', filename)
+  }
+  return `/api/video/download?${params.toString()}`
 }
 
 /**

@@ -35,18 +35,12 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" min-width="200">
+        <el-table-column label="操作" min-width="120">
           <template #default="{ row }">
-            <el-button-group>
-              <el-button size="small" @click.stop="handleCopy(row.url)">
-                <el-icon><CopyDocument /></el-icon>
-                复制链接
-              </el-button>
-              <el-button size="small" type="primary" @click.stop="handleDownload(row.url)">
+              <el-button size="small" type="primary" @click.stop="handleDownload(row)">
                 <el-icon><Download /></el-icon>
                 下载
               </el-button>
-            </el-button-group>
           </template>
         </el-table-column>
       </el-table>
@@ -61,12 +55,13 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { ElMessage } from 'element-plus'
-import { VideoPlay, CopyDocument, Download, InfoFilled } from '@element-plus/icons-vue'
+import { VideoPlay, Download, InfoFilled } from '@element-plus/icons-vue'
 import type { VideoQuality } from '../types/video'
+import { getDownloadUrl } from '../api/video'
 
 const props = defineProps<{
   qualities: VideoQuality[]
+  videoTitle?: string
 }>()
 
 const emit = defineEmits<{
@@ -92,17 +87,12 @@ function handleRowClick(row: VideoQuality) {
   emit('select', row)
 }
 
-async function handleCopy(url: string) {
-  try {
-    await navigator.clipboard.writeText(url)
-    ElMessage.success('链接已复制到剪贴板')
-  } catch {
-    ElMessage.error('复制失败，请手动复制')
-  }
-}
-
-function handleDownload(url: string) {
-  window.open(url, '_blank')
+function handleDownload(row: VideoQuality) {
+  // 生成文件名：视频标题_清晰度.mp4
+  const title = props.videoTitle || 'video'
+  const filename = `${title}_${row.quality}.mp4`
+  const downloadUrl = getDownloadUrl(row.url, filename)
+  window.open(downloadUrl, '_blank')
 }
 </script>
 

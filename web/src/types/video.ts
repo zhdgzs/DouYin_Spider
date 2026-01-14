@@ -23,6 +23,9 @@ export interface VideoQuality {
   gear_name: string
   width: number
   height: number
+  fps: number
+  bitrate: number
+  bitrate_str: string
   file_size: number
   file_size_str: string
   url: string

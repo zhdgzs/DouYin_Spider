@@ -37,6 +37,21 @@ def _get_auth() -> DouyinAuth:
     return auth
 
 
+def _format_bitrate(bitrate: int) -> str:
+    """
+    格式化码率为可读字符串
+    """
+    if bitrate <= 0:
+        return "未知"
+
+    if bitrate >= 1000000:
+        return f"{bitrate / 1000000:.1f} Mbps"
+    elif bitrate >= 1000:
+        return f"{bitrate / 1000:.0f} Kbps"
+    else:
+        return f"{bitrate} bps"
+
+
 def _format_file_size(size_bytes: int) -> str:
     """
     格式化文件大小为可读字符串
@@ -156,6 +171,12 @@ async def parse_video(url: str) -> VideoParseResponse:
         seen_qualities = set()
 
         for bit_rate in bit_rate_list:
+            # 调试：打印原始 bit_rate 数据结构
+            logger.debug(f"bit_rate 原始数据: {bit_rate.keys() if isinstance(bit_rate, dict) else bit_rate}")
+            logger.debug(f"bit_rate 详情: FPS={bit_rate.get('FPS')}, fps={bit_rate.get('fps')}, "
+                        f"bit_rate={bit_rate.get('bit_rate')}, bitrate={bit_rate.get('bitrate')}, "
+                        f"gear_name={bit_rate.get('gear_name')}")
+
             play_addr = bit_rate.get("play_addr", {})
             url_list = play_addr.get("url_list", [])
 
@@ -169,12 +190,16 @@ async def parse_video(url: str) -> VideoParseResponse:
             width = play_addr.get("width", 0) or bit_rate.get("width", 0)
             height = play_addr.get("height", 0) or bit_rate.get("height", 0)
 
+            # 获取帧率和码率
+            fps = bit_rate.get("FPS", 0) or bit_rate.get("fps", 0)
+            bitrate = bit_rate.get("bit_rate", 0) or bit_rate.get("bitrate", 0)
+
             # 生成清晰度标签
             quality_label = _get_quality_label(width, height)
             gear_name = bit_rate.get("gear_name", "")
 
-            # 去重
-            quality_key = f"{quality_label}_{gear_name}"
+            # 去重（考虑帧率差异）
+            quality_key = f"{quality_label}_{gear_name}_{fps}"
             if quality_key in seen_qualities:
                 continue
             seen_qualities.add(quality_key)
@@ -187,6 +212,9 @@ async def parse_video(url: str) -> VideoParseResponse:
                 gear_name=gear_name,
                 width=width,
                 height=height,
+                fps=fps,
+                bitrate=bitrate,
+                bitrate_str=_format_bitrate(bitrate),
                 file_size=file_size,
                 file_size_str=_format_file_size(file_size),
                 url=video_url
@@ -207,13 +235,16 @@ async def parse_video(url: str) -> VideoParseResponse:
                     gear_name="default",
                     width=width,
                     height=height,
+                    fps=0,
+                    bitrate=0,
+                    bitrate_str="未知",
                     file_size=file_size,
                     file_size_str=_format_file_size(file_size),
                     url=video_url
                 ))
 
-        # 按清晰度排序 (高清在前)
-        video_urls.sort(key=lambda x: x.height, reverse=True)
+        # 按清晰度和帧率排序 (高清在前，高帧率在前)
+        video_urls.sort(key=lambda x: (x.height, x.fps), reverse=True)
 
         # 构建视频信息
         video_info = VideoInfo(
