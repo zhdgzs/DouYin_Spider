@@ -1,0 +1,21 @@
+# FastAPI Web API 专用依赖
+# 安装方式: pip install -r requirements-api.txt
+
+# Web 框架
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+
+# 数据验证
+pydantic>=2.5.0
+
+# HTTP 客户端 (用于视频代理)
+httpx>=0.25.0
+
+# 原项目遗漏的依赖 (API 服务运行所需)
+beautifulsoup4>=4.12.0
+protobuf>=4.25.0
+protobuf3-to-dict>=0.1.0
+websocket-client>=1.6.0
+
+# 注意: 此文件包含 API 服务的额外依赖以及原项目遗漏的依赖
+# 运行 API 服务前，请确保已安装主项目依赖: pip install -r requirements.txt
