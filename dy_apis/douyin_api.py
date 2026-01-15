@@ -34,15 +34,30 @@ class DouyinAPI:
         """
         max_cursor = "0"
         work_list = []
+        request_count = 0
         while True:
+            request_count += 1
             res_json = DouyinAPI.get_user_work_info(auth, user_url, max_cursor)
+            print(f"[DEBUG] 第{request_count}次请求, 响应: {res_json}，max_cursor={max_cursor}")
+
             if "aweme_list" not in res_json.keys():
+                print(f"[DEBUG] 响应中无 aweme_list, 响应: {res_json}")
                 break
+
             works = res_json["aweme_list"]
             max_cursor = str(res_json["max_cursor"])
+            has_more = res_json.get("has_more", 0)
+
+            print(f"[DEBUG] 本次获取 {len(works)} 个, has_more={has_more}, 新cursor={max_cursor}")
+
             work_list.extend(works)
-            if res_json["has_more"] != 1:
+            if has_more != 1:
                 break
+
+            # 添加随机延时，避免请求过快触发反爬
+            time.sleep(random.uniform(1.0, 2.0))
+
+        print(f"[DEBUG] 总共获取 {len(work_list)} 个作品")
         return work_list
 
 

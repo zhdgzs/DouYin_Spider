@@ -20,6 +20,12 @@ from api.config import (
 )
 from api.routers.video import router as video_router
 from api.routers.auth import router as auth_router
+from api.routers.user import router as user_router
+from api.routers.search import router as search_router
+from api.routers.comment import router as comment_router
+from api.routers.live import router as live_router
+from api.routers.collection import router as collection_router
+from api.routers.relation import router as relation_router
 
 # 创建 FastAPI 应用
 app = FastAPI(
@@ -42,6 +48,12 @@ app.add_middleware(
 # 注册路由
 app.include_router(video_router)
 app.include_router(auth_router)
+app.include_router(user_router)
+app.include_router(search_router)
+app.include_router(comment_router)
+app.include_router(live_router)
+app.include_router(collection_router)
+app.include_router(relation_router)
 
 # 静态文件服务 (前端构建产物)
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "..", "web", "dist")
