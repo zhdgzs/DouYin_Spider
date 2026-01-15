@@ -36,16 +36,12 @@ async def parse_video_url(request: VideoParseRequest):
     """
     解析抖音视频链接，获取视频信息和多清晰度下载地址
 
-    - **url**: 抖音视频链接 (支持多种格式)
+    - **url**: 抖音视频链接或包含链接的分享文本（支持短链接）
 
     返回视频的基本信息、作者信息、统计数据以及多个清晰度的下载地址（含文件大小）
     """
     if not request.url:
         return VideoParseResponse(success=False, message="请提供视频链接")
-
-    # 简单验证 URL 格式
-    if "douyin.com" not in request.url and "iesdouyin.com" not in request.url:
-        return VideoParseResponse(success=False, message="请提供有效的抖音视频链接")
 
     result = await parse_video(request.url)
     return result

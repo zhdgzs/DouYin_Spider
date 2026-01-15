@@ -14,6 +14,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from loguru import logger
 
+# 配置 loguru 日志级别（从环境变量读取，默认 INFO）
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+logger.remove()
+logger.add(sys.stderr, level=LOG_LEVEL)
+
 from api.config import (
     API_VERSION, CORS_ORIGINS, CORS_ALLOW_CREDENTIALS,
     CORS_ALLOW_METHODS, CORS_ALLOW_HEADERS, HOST, PORT

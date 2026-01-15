@@ -5,8 +5,49 @@
 import os
 import re
 import httpx
-from typing import Optional, Tuple
+from typing import Optional
 from loguru import logger
+
+
+# 抖音链接正则模式
+DOUYIN_URL_PATTERNS = [
+    r'https?://v\.douyin\.com/[A-Za-z0-9]+/?',  # 短链接
+    r'https?://www\.douyin\.com/video/\d+',      # 视频链接
+    r'https?://www\.douyin\.com/[^?\s]*\?[^?\s]*modal_id=\d+',  # modal_id 链接
+]
+
+
+def extract_douyin_url(text: str) -> Optional[str]:
+    """
+    从文本中提取抖音视频链接
+    支持短链接和完整链接，过滤无用字符
+    """
+    for pattern in DOUYIN_URL_PATTERNS:
+        match = re.search(pattern, text)
+        if match:
+            return match.group(0)
+    return None
+
+
+async def resolve_short_url(short_url: str) -> str:
+    """
+    解析抖音短链接，获取重定向后的真实 URL
+    """
+    if 'v.douyin.com' not in short_url:
+        return short_url
+
+    try:
+        async with httpx.AsyncClient(timeout=10, follow_redirects=True, verify=False) as client:
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            }
+            response = await client.get(short_url, headers=headers)
+            final_url = str(response.url)
+            logger.debug(f"短链接解析: {short_url} -> {final_url}")
+            return final_url
+    except Exception as e:
+        logger.warning(f"解析短链接失败: {e}")
+    return short_url
 
 # 导入现有模块 (不修改原有代码)
 import sys
@@ -121,14 +162,26 @@ def _get_quality_label(width: int, height: int) -> str:
         return f"{max_dim}p"
 
 
-async def parse_video(url: str) -> VideoParseResponse:
+async def parse_video(input_text: str) -> VideoParseResponse:
     """
     解析抖音视频链接，获取视频信息和多清晰度下载地址
+    支持从分享文本中提取链接，支持短链接解析
 
-    :param url: 抖音视频链接
+    :param input_text: 用户输入（可包含分享文字和链接）
     :return: VideoParseResponse
     """
     try:
+        # 从输入中提取抖音链接
+        url = extract_douyin_url(input_text)
+        if not url:
+            return VideoParseResponse(
+                success=False,
+                message="未找到有效的抖音视频链接"
+            )
+
+        # 解析短链接
+        url = await resolve_short_url(url)
+
         # 获取认证
         auth = _get_auth()
 
